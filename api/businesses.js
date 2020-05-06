@@ -2,34 +2,34 @@ const router = require('express').Router();
 const validation = require('../lib/validation');
 
 const businesses = require('../data/businesses');
-const { reviews } = require('./reviews');
-const { photos } = require('./photos');
+const {reviews} = require('./reviews');
+const {photos} = require('./photos');
 
 exports.router = router;
 exports.businesses = businesses;
+import Business from "../model/businesses";
 
 /*
  * Schema describing required/optional fields of a business object.
  */
 const businessSchema = {
-  ownerid: { required: true },
-  name: { required: true },
-  address: { required: true },
-  city: { required: true },
-  state: { required: true },
-  zip: { required: true },
-  phone: { required: true },
-  category: { required: true },
-  subcategory: { required: true },
-  website: { required: false },
-  email: { required: false }
+  ownerid: {required: true},
+  name: {required: true},
+  address: {required: true},
+  city: {required: true},
+  state: {required: true},
+  zip: {required: true},
+  phone: {required: true},
+  category: {required: true},
+  subcategory: {required: true},
+  website: {required: false},
+  email: {required: false}
 };
 
 /*
  * Route to return a list of businesses.
  */
 router.get('/', function (req, res) {
-
   /*
    * Compute page number based on optional query string parameter `page`.
    * Make sure page is within allowed bounds.
@@ -45,9 +45,12 @@ router.get('/', function (req, res) {
    * slice out the corresponsing sub-array of busibesses.
    */
   const start = (page - 1) * numPerPage;
+  console.log('start:', start);
   const end = start + numPerPage;
+  console.log('end:', end);
   const pageBusinesses = businesses.slice(start, end);
-
+  let pageID = pageBusinesses.map(e => e.id)
+  console.log("pageID:", pageID);
   /*
    * Generate HATEOAS links for surrounding pages.
    */
@@ -61,17 +64,32 @@ router.get('/', function (req, res) {
     links.firstPage = '/businesses?page=1';
   }
 
+  if (page != null || page !== undefined) {
+    return Business.find({_id: pageID}, function (err, doc) {
+      if (err) {
+        return res.send(err);
+      }
+      return res.send({
+        businesses: doc,
+        pageNumber: page,
+        totalPages: lastPage,
+        pageSize: numPerPage,
+        totalCount: businesses.length,
+        links: links
+      })
+    })
+  }
   /*
    * Construct and send response.
    */
-  res.status(200).json({
-    businesses: pageBusinesses,
-    pageNumber: page,
-    totalPages: lastPage,
-    pageSize: numPerPage,
-    totalCount: businesses.length,
-    links: links
-  });
+  // res.status(200).json({
+  //   businesses: pageBusinesses,
+  //   pageNumber: page,
+  //   totalPages: lastPage,
+  //   pageSize: numPerPage,
+  //   totalCount: businesses.length,
+  //   links: links
+  // });
 
 });
 
@@ -79,21 +97,51 @@ router.get('/', function (req, res) {
  * Route to create a new business.
  */
 router.post('/', function (req, res, next) {
-  if (validation.validateAgainstSchema(req.body, businessSchema)) {
-    const business = validation.extractValidFields(req.body, businessSchema);
-    business.id = businesses.length;
-    businesses.push(business);
-    res.status(201).json({
-      id: business.id,
-      links: {
-        business: `/businesses/${business.id}`
+  const {id, ownerid, name, address, city, state, zip, phone, category, subcategory, website, email} = req.body;
+  console.log(id, ownerid, name, address, city, state, zip, phone, category, subcategory, website, email);
+
+  const business = {
+    _id: id,
+    ownerid: ownerid || 'unknown',
+    name: name || 'unknown',
+    address: address || 'unknown',
+    city: city || 'unknown',
+    state: state || 'unknown',
+    zip: zip || 'unknown',
+    phone: phone || 'unknown',
+    category: category || 'unknown',
+    subcategory: subcategory || 'unknown',
+    website: website || 'unknown',
+    email: email || 'unknown',
+  };
+
+  return Business.find({_id: id, ownerid: ownerid, name: name, phone: phone}, function (err, doc) {
+    if (doc.length > 0) {
+      return res.status(409).send(`Conflict: the ${doc.length} document exist in DB`);
+    }
+    return Business.create(business, function (err, doc) {
+      if (err) {
+        return res.status(404).send(err);
       }
-    });
-  } else {
-    res.status(400).json({
-      error: "Request body is not a valid business object"
-    });
-  }
+      return res.send(doc);
+    })
+  })
+
+  /*if (validation.validateAgainstSchema(req.body, businessSchema)) {
+   const business = validation.extractValidFields(req.body, businessSchema);
+   business.id = businesses.length;
+   businesses.push(business);
+   res.status(201).json({
+   id: business.id,
+   links: {
+   business: `/businesses/${business.id}`
+   }
+   });
+   } else {
+   res.status(400).json({
+   error: "Request body is not a valid business object"
+   });
+   }*/
 });
 
 /*

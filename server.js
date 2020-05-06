@@ -1,11 +1,16 @@
 const express = require('express');
 const morgan = require('morgan');
-
+const mongoose = require('mongoose')
 const api = require('./api');
-
+const dotenv = require('dotenv');
 const app = express();
 const port = process.env.PORT || 8000;
 
+const envConfig = dotenv.config();
+if (envConfig.error) {
+  console.log('.env file does not loaded');
+  throw envConfig.error;
+}
 /*
  * Morgan is a popular logger.
  */
@@ -26,6 +31,15 @@ app.use('*', function (req, res, next) {
     error: "Requested resource " + req.originalUrl + " does not exist"
   });
 });
+
+mongoose.connect(process.env.MONGO_PATH, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+}).then((result) => {
+  console.log(`MongoDB connection granted ${result}`);
+}).catch(error => console.log(`There is troubles with connecting to MongoDB ${error}`));
 
 app.listen(port, function() {
   console.log("== Server is running on port", port);
