@@ -4,7 +4,6 @@ const mongoose = require('mongoose')
 const api = require('./api');
 const dotenv = require('dotenv');
 const app = express();
-const port = process.env.PORT || 8000;
 
 const envConfig = dotenv.config();
 if (envConfig.error) {
@@ -37,10 +36,7 @@ mongoose.connect(process.env.MONGO_PATH, {
   useUnifiedTopology: true,
   useCreateIndex: true,
   useFindAndModify: false
-}).then((result) => {
-  console.log(`MongoDB connection granted ${result}`);
-}).catch(error => console.log(`There is troubles with connecting to MongoDB ${error}`));
+}).then(result => console.log(`MongoDB connected`))
+  .catch(error => console.log(`There is troubles with connecting to MongoDB ${error}`));
 
-app.listen(port, function() {
-  console.log("== Server is running on port", port);
-});
+app.listen(process.env.PORT, () => console.log("== Server is running on port", process.env.PORT));

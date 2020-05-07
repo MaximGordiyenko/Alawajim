@@ -1,12 +1,12 @@
 const router = require('express').Router();
 const validation = require('../lib/validation');
 
-// const businesses = require('../data/businesses');
+const businesses = require('../data/businesses');
 const {reviews} = require('./reviews');
 const {photos} = require('./photos');
 
 exports.router = router;
-// exports.businesses = businesses;
+exports.businesses = businesses;
 import Business from "../model/businesses";
 
 /*
@@ -36,20 +36,11 @@ router.get('/', function (req, res) {
         return res.send(err);
       }
       const lastPage = Math.ceil(doc.length / numPerPage);
-      console.log('last page:', lastPage);
-      console.log('doc length:', doc.length);
-
       page = page < lastPage ? page : lastPage
 
       const start = (page - 1) * numPerPage;
-      console.log('start:', start);
       const end = Math.floor(start + numPerPage);
-      console.log('end:', end);
-
-      const pageBusinesses = doc.slice(start, end); //0-10, 10-20
-      console.log('pageBusinesses:', pageBusinesses);
-      let pageID = pageBusinesses.map(e => parseInt(e.id));
-      console.log("pageID:", pageID);
+      const pageBusinesses = doc.slice(start, end);
 
       const links = {};
       if (page < lastPage) {
@@ -61,6 +52,7 @@ router.get('/', function (req, res) {
         links.firstPage = '/businesses?page=1';
       }
 
+      let pageID = pageBusinesses.map(e => parseInt(e.id));
       return Business.find({_id: pageID}, function (err, onePage) {
         if (err) {
           return res.send(err);
@@ -78,16 +70,13 @@ router.get('/', function (req, res) {
   }
 });
 
-/*
- * Route to create a new business.
- */
 router.post('/', function (req, res, next) {
   const {id, ownerid, name, address, city, state, zip, phone, category, subcategory, website, email} = req.body;
   console.log(id, ownerid, name, address, city, state, zip, phone, category, subcategory, website, email);
 
   const business = {
-    _id: id,
-    ownerid: ownerid || 'unknown',
+    _id: id || null,
+    ownerid: ownerid || null,
     name: name || 'unknown',
     address: address || 'unknown',
     city: city || 'unknown',
@@ -134,6 +123,14 @@ router.post('/', function (req, res, next) {
  */
 router.get('/:businessid', function (req, res, next) {
   const businessid = parseInt(req.params.businessid);
+  console.log("businessid:", businessid);
+
+  // return Business.find({_id: businessid}, function (err, doc) {
+  //   if (err) {
+  //     return res.send(err);
+  //   }
+  //   return res.send(doc)
+  // })
   if (businesses[businessid]) {
     /*
      * Find all reviews and photos for the specified business and create a
@@ -156,25 +153,54 @@ router.get('/:businessid', function (req, res, next) {
  */
 router.put('/:businessid', function (req, res, next) {
   const businessid = parseInt(req.params.businessid);
-  if (businesses[businessid]) {
+  console.log('businessid', businessid);
+  const {ownerid, name, address, city, state, zip, phone, category, subcategory, website} = req.body;
+  console.log(ownerid, name, address, city, state, zip, phone, category, subcategory, website);
 
-    if (validation.validateAgainstSchema(req.body, businessSchema)) {
-      businesses[businessid] = validation.extractValidFields(req.body, businessSchema);
-      businesses[businessid].id = businessid;
-      res.status(200).json({
-        links: {
-          business: `/businesses/${businessid}`
-        }
-      });
-    } else {
-      res.status(400).json({
-        error: "Request body is not a valid business object"
-      });
+  const updateBusinesses = {
+    ownerid: ownerid,
+    name: name,
+    address: address,
+    city: city,
+    state: state,
+    zip: zip,
+    phone: phone,
+    category: category,
+    subcategory: subcategory,
+    website: website
+  };
+
+  return Business.findByIdAndUpdate(businessid, updateBusinesses, {new: true}, function (err, doc) {
+    if (err) {
+      return res.send(err)
     }
-
-  } else {
-    next();
-  }
+    return res.send({
+      links: {
+        business: `/businesses/${businessid}`,
+      },
+      // updating: doc
+    });
+  });
+  // if (businesses[businessid]) {
+  //
+  //   if (validation.validateAgainstSchema(req.body, businessSchema)) {
+  //     businesses[businessid] = validation.extractValidFields(req.body, businessSchema);
+  //     console.log('bissness id:', businesses[businessid]);
+  //     businesses[businessid].id = businessid;
+  //     res.status(200).json({
+  //       links: {
+  //         business: `/businesses/${businessid}`
+  //       }
+  //     });
+  //   } else {
+  //     res.status(400).json({
+  //       error: "Request body is not a valid business object"
+  //     });
+  //   }
+  //
+  // } else {
+  //   next();
+  // }
 });
 
 /*
@@ -182,10 +208,18 @@ router.put('/:businessid', function (req, res, next) {
  */
 router.delete('/:businessid', function (req, res, next) {
   const businessid = parseInt(req.params.businessid);
-  if (businesses[businessid]) {
-    businesses[businessid] = null;
-    res.status(204).end();
-  } else {
-    next();
-  }
+
+  return Business.findByIdAndDelete({_id: businessid}, function (err, doc) {
+    if (!doc || err) {
+      return res.status(500).send(err);
+    }
+    return res.status(200).send(doc);
+  })
+
+  // if (businesses[businessid]) {
+  //   businesses[businessid] = null;
+  //   res.status(204).end();
+  // } else {
+  //   next();
+  // }
 });
