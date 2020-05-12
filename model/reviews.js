@@ -1,4 +1,7 @@
 import mongoose from 'mongoose';
+const Schema = require("mongoose");
+import Business from "./businesses";
+import Photo from "./photos";
 
 const reviewSchema = new mongoose.Schema({
   _id: {
@@ -24,6 +27,14 @@ const reviewSchema = new mongoose.Schema({
   review: {
     type: String,
     required: false
+  },
+  business: {
+    type: Schema.Types.ObjectId,
+    ref: "Business"
+  },
+  photo: {
+    type: Schema.Types.ObjectId,
+    ref: "Photo"
   }
 });
 
