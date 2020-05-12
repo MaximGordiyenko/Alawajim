@@ -1,8 +1,4 @@
-# Assignment 2
-
-**Assignment due at 11:59pm on Monday 5/4/2020**
-
-**Demo due by 11:59pm on Monday 5/18/2020**
+# Assignment
 
 The goals of this assignment are to start to use a database to store application data and to use Docker Compose to define a multi-container specification for our API application.  There are a few parts to this assignment, as described below.
 

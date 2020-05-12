@@ -4,7 +4,7 @@ import Photo from "../model/photos";
 import Review from "../model/reviews";
 
 router.get('/', function (req, res) {
-  let {page} = parseInt(req.body);
+  let page = parseInt(req.query.page) || 1;
   const numPerPage = 10;
 
   if (page != null || page !== undefined) {
