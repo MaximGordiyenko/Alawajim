@@ -1,11 +1,11 @@
 export const router = require('express').Router();
+const mongoose = require('mongoose');
 import Review from "../model/reviews";
 
 router.post('/', function (req, res) {
   const {id, userid, businessid, dollars, stars, review} = req.body;
 
   const re_view = {
-    _id: id || null,
     userid: userid || null,
     businessid: businessid || null,
     dollars: dollars || null,
@@ -13,7 +13,7 @@ router.post('/', function (req, res) {
     review: review || 'unknown',
   };
 
-  return Review.find({_id: id, userid: userid, businessid: businessid}, function (err, doc) {
+  return Review.find({businessid: businessid}, function (err, doc) {
     if (doc.length > 0) {
       return res.status(409).send(`Conflict: the ${doc.length} document exist in DB`);
     }
@@ -36,7 +36,7 @@ router.post('/', function (req, res) {
 router.get('/:reviewID', function (req, res) {
   const reviewID = parseInt(req.params.reviewID);
 
-  return Review.find({_id: reviewID}, function (err, doc) {
+  return Review.find({businessid: reviewID}, function (err, doc) {
     if (err) {
       return res.status(500).send(err);
     }
@@ -73,7 +73,7 @@ router.put('/:reviewID', function (req, res) {
 router.delete('/:reviewID', function (req, res) {
   const reviewID = parseInt(req.params.reviewID);
 
-  return Review.findByIdAndDelete({_id: reviewID}, function (err, doc) {
+  return Review.findByIdAndDelete({businessid: reviewID}, function (err, doc) {
     if (err) {
       return res.status(500).send(err)
     }

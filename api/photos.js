@@ -1,17 +1,17 @@
 export const router = require('express').Router();
+const mongoose = require('mongoose');
 import Photo from "../model/photos";
 
 router.post('/', function (req, res) {
   const {id, userid, businessid, caption} = req.body;
 
   const photo = {
-    _id: id || null,
     userid: userid || null,
     businessid: businessid || null,
     caption: caption || "unknown"
   };
 
-  return Photo.find({_id: id, userid: userid, businessid: businessid}, function (err, doc) {
+  return Photo.find({businessid: businessid}, function (err, doc) {
     if (doc.length > 0) {
       return res.status(409).send(`Conflict: the ${doc.length} document exist in DB`);
     }
@@ -24,7 +24,8 @@ router.post('/', function (req, res) {
         links: {
           photo: `/photos/${id}`,
           business: `/businesses/${businessid}`
-        }
+        },
+        document: photo
       });
     });
   });
@@ -33,7 +34,7 @@ router.post('/', function (req, res) {
 router.get('/:photoID', function (req, res) {
   const photoID = parseInt(req.params.photoID);
 
-  return Photo.find({_id: photoID}, function (err, photo) {
+  return Photo.find({businessid: photoID}, function (err, photo) {
     if (err) {
       return res.status(500).send(err);
     }

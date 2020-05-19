@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
-const Schema = require("mongoose");
 import Review from "./reviews";
 import Photo from "./photos";
 
 const BusinessSchema = new mongoose.Schema({
-  _id: {
+  businessid: {
     type: Number,
-    required: true
+    required: true,
   },
   ownerid: {
     type: Number,
@@ -52,14 +51,14 @@ const BusinessSchema = new mongoose.Schema({
     type: String,
     required: false
   },
-  review: {
-    type: Schema.Types.ObjectId,
+  review: [{
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Review"
-  },
-  photo: {
-    type: Schema.Types.ObjectId,
+  }],
+  photo: [{
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Photo"
-  }
+  }]
 });
 
 const Business = mongoose.model('Business', BusinessSchema);

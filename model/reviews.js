@@ -1,20 +1,15 @@
 import mongoose from 'mongoose';
-const Schema = require("mongoose");
 import Business from "./businesses";
 import Photo from "./photos";
 
 const reviewSchema = new mongoose.Schema({
-  _id: {
-    type: Number,
-    required: true
-  },
   userid: {
     type: Number,
     required: true
   },
   businessid: {
     type: Number,
-    required: true
+    required: true,
   },
   dollars: {
     type: Number,
@@ -28,14 +23,14 @@ const reviewSchema = new mongoose.Schema({
     type: String,
     required: false
   },
-  business: {
-    type: Schema.Types.ObjectId,
+  business: [{
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Business"
-  },
-  photo: {
-    type: Schema.Types.ObjectId,
+  }],
+  photo: [{
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Photo"
-  }
+  }]
 });
 
 const Review = mongoose.model('Review', reviewSchema);
